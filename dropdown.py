@@ -1,3 +1,6 @@
+pip install PyPDF2
+
+
 import streamlit as st
 from PyPDF2 import PdfFileMerger
 import io
