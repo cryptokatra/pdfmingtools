@@ -1,21 +1,44 @@
 import streamlit as st
+from PyPDF2 import PdfFileMerger
+import io
 
-# 定义下拉菜单的选项
-options = {
-    'Link 1': 'https://www.ilovepdf.com/zh-tw/merge_pdf',
-    'Link 2': 'https://en.y2mate.is/52/',
-    'Link 3': 'https://scholar.google.com/'
-}
+st.title('PDF文檔合併工具')
 
-# 创建下拉菜单
-selected_option = st.selectbox('请选择一个链接', list(options.keys()))
+# 创建一个上传文件的控件
+uploaded_files = st.file_uploader(
+    label='请选择要合併的PDF文檔（可以選擇多個）',
+    accept_type=['pdf'],
+    type='pdf',
+    multiple_files=True
+)
 
-# 获取用户选择的链接
-selected_link = options[selected_option]
+# 如果没有上传文件则显示提示信息
+if uploaded_files is None:
+    st.info('请上传您要合併的PDF文檔')
 
-# 在浏览器中打开链接
-if st.button('前往链接'):
-    st.write('正在前往链接，请稍候...')
-    js = f"window.open('{selected_link}')"  # 构建JavaScript代码
-    html = f"<script>{js}</script>"  # 将JavaScript代码插入HTML
-    st.write(html, unsafe_allow_html=True)  # 在Streamlit中显示HTML代码
+# 创建一个按钮用于合併PDF文档
+if st.button('合併PDF文档'):
+    try:
+        # 创建一个PDF合并器对象
+        merger = PdfFileMerger()
+
+        # 将上传的PDF文档添加到合并器对象中
+        for uploaded_file in uploaded_files:
+            pdf_reader = io.BytesIO(uploaded_file.read())
+            merger.append(pdf_reader)
+
+        # 将合并后的PDF文档保存到本地
+        output_pdf = io.BytesIO()
+        merger.write(output_pdf)
+
+        # 显示合并后的PDF文档
+        st.success('PDF文档合并完成！')
+        st.download_button(
+            label='下载合并后的PDF文档',
+            data=output_pdf.getvalue(),
+            file_name='merged_document.pdf',
+            mime='application/pdf'
+        )
+
+    except Exception as e:
+        st.error(e)
